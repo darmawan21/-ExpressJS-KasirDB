@@ -6,6 +6,7 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var transaksiBayarRouter = require('./routes/transaksi_bayar');
+var transaksiBayarDetailRouter = require('./routes/transaksi_bayar_detail');
 
 var app = express();
 
@@ -21,6 +22,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/transaksi-bayar', transaksiBayarRouter);
+app.use('/transaksi-bayar-detail', transaksiBayarDetailRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
