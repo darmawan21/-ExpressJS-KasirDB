@@ -1,78 +1,150 @@
 var express = require('express');
 var router = express.Router();
-var Transaksi_Bayar = require("../models/transaksi_bayar");
+var TransaksiBayar = require('../models/transaksi_bayar');
+const axios = require('axios');
 
-/*TAMPIL DATA Transaksi_Bayar. */
-router.get('/', function(req, res, next) {
-Transaksi_Bayar.findAndCountAll().then(data => {
-    res.json({
-      status: true,
-      pesan: "Berhasil Tampil",
-      data:data.rows,
-      count: data.count
-    });
-  }).catch(salahnya=>{
-    res.json({
-      status: false,
-      pesan: "Gagal Tampil: " + salahnya.message,
-      data: []
-    });
-  });
+router.get('/',function(req,res,next){
+	TransaksiBayar.findAll({raw:true}).then( async data=>{
+
+		await Promise.all(data.map( async (item)=>{
+			//baca Transaksi Periksa
+			var transaksiPeriksa = null;
+			await axios.get('http://localhost:3001/transaksi-periksa/tampil/'+item.id_transaksi_periksa).then( function (response) {
+				transaksiPeriksa = response.data;
+			}).catch( err=> {
+				res.json({
+					status: false,
+					pesan: "Gagal tampil: " + err.message,
+					data:[]
+				});
+			});
+
+			//update itemTampil
+			item['biaya_transaksi_periksa'] = transaksiPeriksa.data.biaya;
+		}));
+
+		res.json({
+			status:true,
+			pesan:"Berhasil Tampil",
+			data:data
+		});
+	}).catch( err=>{
+		res.json({
+			status: false,
+			pesan: "Gagal tampilll: " + err.message,
+			data:[]
+		});
+	});
 });
 
-/* TAMBAH DATA Transaksi_Bayar. */
-router.post('/', function(req, res, next) {
-Transaksi_Bayar.create(req.body).then(data => {
-    res.json({
-      status: true,
-      pesan: "Berhasil Ditambah",
-      data:data
+router.post('/',function(req,res,next){
+
+    TransaksiBayar.create(req.body).then( data=>{
+        res.json({
+            status:true,
+            pesan:"Berhasil Tambah",
+            data:data
+        });
+    }).catch( err=>{
+        res.json({
+            status: false,
+            pesan: "Gagal Tambah: " + err.message,
+            data:[]
+        });
     });
-  }).catch(salahnya=>{
-    res.json({
-      status: false,
-      pesan: "Gagal Tampil: " + salahnya.message,
-      data: req.body
-    });
-  });
+
 });
 
-/* UBAH DATA Transaksi_Bayar. */
-router.put('/', function(req, res, next) {
-Transaksi_Bayar.update(req.body, {
-    where : {id:req.body.id}
-  }).then(data => {
-    res.json({
-      status: true,
-      pesan: "Berhasil Ubah",
-      data:data
-    });
-  }).catch(salahnya=>{
-    res.json({
-      status: false,
-      pesan: "Gagal Ubah: " + salahnya.message,
-      data:req.body
-    });
-  });
+router.put('/',function(req,res,next){
+	TransaksiBayar.update(req.body,{
+		where:{id:req.body.id}
+	}).then( ()=>{
+		res.json({
+			status:true,
+			pesan:"Berhasil Ubah",
+			data:[]
+		});
+	}).catch( err=>{
+		res.json({
+			status: false,
+			pesan: "Gagal Ubah: " + err.message,
+			data:[]
+		});
+	});
 });
 
-/* HAPUS DATA Transaksi_Bayar. */
-router.delete('/', function(req, res, next) {
-Transaksi_Bayar.destroy({
-    where : {id:req.body.id}
-  }).then(data => {
-    res.json({
-      status: true,
-      pesan: "Berhasil Hapus",
-      data:data
-    });
-  }).catch(salahnya=>{
-    res.json({
-      status: false,
-      pesan: "Gagal Hapus: " + salahnya.message,
-      data:req.body
-    });
-  });
+router.delete('/',function(req,res,next){
+	TransaksiBayar.destroy({
+		where:{id:req.body.id}
+	}).then( ()=>{
+		res.json({
+			status:true,
+			pesan:"Berhasil Hapus",
+			data:[]
+		});
+	}).catch( err=>{
+		res.json({
+			status: false,
+			pesan: "Gagal Hapus: " + err.message,
+			data:[]
+		});
+	});
+});
+
+router.get('/transaksi-periksa',function(req,res,next){
+	axios.get('http://localhost:3001/transaksi-periksa/options').then(function (response) {
+		console.log(response);
+		res.json(response.data);
+	}).catch( err=> {
+		res.json({
+			status: false,
+			pesan: "Gagal tampil: " + err.message,
+			data:[]
+		});
+	});
+});
+
+router.get('/options',function(req,res,next){
+	TransaksiBayar.findAll({raw:true}).then( async data=>{
+
+		await Promise.all(data.map( async (item)=>{
+			//baca transaksi Periksa
+			var transaksiPeriksa = null;
+			await axios.get('http://localhost:3001/transaksi-periksa/tampil/'+item.id_transaksi_periksa).then( function (response) {
+				transaksiPeriksa = response.data;
+			}).catch( err=> {
+				res.json({
+					status: false,
+					pesan: "Gagal tampil: " + err.message,
+					data:[]
+				});
+			});
+
+			//update itemTampil
+			item['biaya_transaksi_periksa'] =  transaksiPeriksa.data.biaya;
+			
+			
+		}));
+
+		var options = data.map(item=> {
+			return{
+				id:item.id,
+				value:item.biaya_transaksi_periksa
+			}
+		})
+
+		res.json({
+			status:true,
+			pesan:"Berhasil Tampil",
+			data:options
+		});
+	}).catch( err=>{
+		res.json({
+			status: false,
+			pesan: "Gagal tampilll: " + err.message,
+			data:[]
+		});
+	});
 });
 
 module.exports = router;

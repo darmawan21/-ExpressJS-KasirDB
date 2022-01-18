@@ -3,12 +3,16 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var cors = require('cors');
 
 var indexRouter = require('./routes/index');
 var transaksiBayarRouter = require('./routes/transaksi_bayar');
 var transaksiBayarDetailRouter = require('./routes/transaksi_bayar_detail');
 
 var app = express();
+
+// cors
+app.use(cors());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

@@ -1,78 +1,87 @@
 var express = require('express');
 var router = express.Router();
-var Transaksi_Bayar_Detail = require("../models/transaksi_bayar_detail");
+const axios = require('axios');
+var TransaksiBayar = require('../models/transaksi_bayar');
+var TransaksiBayarDetail = require('../models/transaksi_bayar_detail');
 
-/*TAMPIL DATA Transaksi Bayar Detail. */
 router.get('/', function(req, res, next) {
-Transaksi_Bayar_Detail.findAndCountAll().then(data => {
-    res.json({
-      status: true,
-      pesan: "Berhasil Tampil",
-      data:data.rows,
-      count: data.count
-    });
-  }).catch(salahnya=>{
-    res.json({
-      status: false,
-      pesan: "Gagal Tampil: " + salahnya.message,
-      data: []
-    });
-  });
+	TransaksiBayarDetail.findAll({raw:true}).then( async data=> {
+	
+	  await Promise.all(data.map( async (item)=>{
+		// baca Transaksi Periksa
+		const transaksi_bayar = await TransaksiBayar.findByPk(item.id_transaksi_bayar);
+	
+		// update itemTampil
+		item['biaya_transaksi_penunjang'] =  transaksi_bayar.id_transaksi_bayar;
+	  }));
+	
+	  res.json({
+		status:true,
+		pesan: "Berhasil Tampil",
+		data:data
+	  });
+	
+	}).catch ( err => {
+	  res.json({
+		status:false,
+		pesan: "Gagal tampil: " + err.message,
+		data:[]
+	  })
+	});
 });
 
-/* TAMBAH DATA Transaksi Bayar Detail. */
-router.post('/', function(req, res, next) {
-Transaksi_Bayar_Detail.create(req.body).then(data => {
-    res.json({
-      status: true,
-      pesan: "Berhasil Ditambah",
-      data:data
+router.post('/',function(req,res,next){
+
+    TransaksiBayarDetail.create(req.body).then( data=>{
+        res.json({
+            status:true,
+            pesan:"Berhasil Tambah",
+            data:data
+        });
+    }).catch( err=>{
+        res.json({
+            status: false,
+            pesan: "Gagal Tambah: " + err.message,
+            data:[]
+        });
     });
-  }).catch(salahnya=>{
-    res.json({
-      status: false,
-      pesan: "Gagal Tampil: " + salahnya.message,
-      data: req.body
-    });
-  });
+
 });
 
-/* UBAH DATA Transaksi Bayar Detail. */
-router.put('/', function(req, res, next) {
-Transaksi_Bayar_Detail.update(req.body, {
-    where : {id:req.body.id}
-  }).then(data => {
-    res.json({
-      status: true,
-      pesan: "Berhasil Ubah",
-      data:data
-    });
-  }).catch(salahnya=>{
-    res.json({
-      status: false,
-      pesan: "Gagal Ubah: " + salahnya.message,
-      data:req.body
-    });
-  });
+router.put('/',function(req,res,next){
+	TransaksiBayarDetail.update(req.body,{
+		where:{id:req.body.id}
+	}).then( ()=>{
+		res.json({
+			status:true,
+			pesan:"Berhasil Ubah",
+			data:[]
+		});
+	}).catch( err=>{
+		res.json({
+			status: false,
+			pesan: "Gagal Ubah: " + err.message,
+			data:[]
+		});
+	});
 });
 
-/* HAPUS DATA Transaksi Bayar Detail. */
-router.delete('/', function(req, res, next) {
-Transaksi_Bayar_Detail.destroy({
-    where : {id:req.body.id}
-  }).then(data => {
-    res.json({
-      status: true,
-      pesan: "Berhasil Hapus",
-      data:data
-    });
-  }).catch(salahnya=>{
-    res.json({
-      status: false,
-      pesan: "Gagal Hapus: " + salahnya.message,
-      data:req.body
-    });
-  });
+router.delete('/',function(req,res,next){
+	TransaksiBayarDetail.destroy({
+		where:{id:req.body.id}
+	}).then( ()=>{
+		res.json({
+			status:true,
+			pesan:"Berhasil Hapus",
+			data:[]
+		});
+	}).catch( err=>{
+		res.json({
+			status: false,
+			pesan: "Gagal Hapus: " + err.message,
+			data:[]
+		});
+	});
 });
 
 module.exports = router;

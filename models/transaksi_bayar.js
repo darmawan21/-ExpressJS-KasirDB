@@ -1,19 +1,20 @@
 const { Sequelize, DataTypes } = require('sequelize');
-var koneksi = require('../koneksi.js');
+var koneksi = require("../koneksi.js");
 
-const Transaksi_Bayar = koneksi.define('Transaksi_Bayar', {
-
+const Transaksi_Bayar = koneksi.define('transaksi_bayar', {
+  id: {
+    type: Sequelize.INTEGER,
+    allowNull: false,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  id_transaksi_periksa: {
+    type: Sequelize.INTEGER,
+    allowNull: false
+  },
 }, {
-    freezeTableName: true
-}), Transaksi_Periksa = koneksi.define('Transaksi_Periksa', {
-    biaya: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-    }
-}, {
+    timestamps: true,
     freezeTableName: true
 });
-
-Transaksi_Bayar.belongsTo(Transaksi_Periksa, {foreignKey: 'id_transaksi_periksa'});
 
 module.exports = Transaksi_Bayar;
